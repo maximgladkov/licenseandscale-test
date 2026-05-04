@@ -6,12 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:enable-pgvector": "prisma db execute --file prisma/enable_pgvector.sql --schema prisma/schema.prisma",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.74",
+    "@ai-sdk/openai": "^3.0.58",
+    "@ai-sdk/react": "^3.0.176",
+    "@gravity-ui/icons": "^2.18.0",
+    "@heroui/react": "^3.0.3",
+    "@heroui/styles": "^3.0.3",
+    "@m2d/react-markdown": "1.0.0",
+    "@prisma/client": "^5.22.0",
+    "@tailwindcss/typography": "0.5.19",
+    "@uiw/react-json-view": "^2.0.0-alpha.42",
+    "ai": "^6.0.174",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "remark-gfm": "4.0.1",
+    "swr": "^2.4.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,7 +43,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

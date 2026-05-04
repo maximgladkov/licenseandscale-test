@@ -1,0 +1,133 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ExemplarKind {
+  CONTENT_POST
+  DM_REPLY
+}
+
+enum Channel {
+  IG_CAPTION
+  REEL_SCRIPT
+  CAROUSEL
+  YOUTUBE_INTRO
+  STORY_QA
+  DM
+}
+
+enum Offer {
+  COURSE
+  ACCELERATOR
+  INNER_CIRCLE
+  NONE
+}
+
+enum Rating {
+  POSITIVE
+  NEGATIVE
+}
+
+enum DraftStatus {
+  PENDING
+  APPROVED
+  EDITED
+  REJECTED
+  SCHEDULED
+  COMPLETED
+}
+
+enum DmIntent {
+  PURCHASE_READY
+  PRODUCT_QUALITY
+  PRICE_SHOPPER
+  GENERAL_QUESTION
+  NOT_A_FIT
+  SPAM
+  OBJECTION
+}
+
+enum DmTemperature {
+  HOT
+  WARM
+  COLD
+}
+
+enum DmDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Exemplar {
+  id            String       @id @default(uuid())
+  kind          ExemplarKind
+  channel       Channel
+  rating        Rating
+  content       String       @db.Text
+  embedding     Unsupported("vector(1536)")?
+  sourceDraftId String?
+  reason        String?      @db.Text
+  createdAt     DateTime     @default(now())
+  sourceDraft   Draft?       @relation("ExemplarFromDraft", fields: [sourceDraftId], references: [id], onDelete: SetNull)
+
+  @@index([kind, channel, rating])
+}
+
+model Draft {
+  id                String       @id @default(uuid())
+  kind              ExemplarKind
+  channel           Channel
+  offer             Offer
+  topic             String       @db.Text
+  content           String       @db.Text
+  pipelineJson      String       @db.Text
+  generationLogJson Json?
+  status            DraftStatus  @default(PENDING)
+  scheduledFor DateTime?
+  dmThreadId   String?
+  createdAt    DateTime     @default(now())
+  dmThread     DmThread?    @relation(fields: [dmThreadId], references: [id], onDelete: SetNull)
+  edits        Edit[]
+  messages     DmMessage[]
+  exemplars    Exemplar[]   @relation("ExemplarFromDraft")
+
+  @@index([kind, status])
+  @@index([scheduledFor])
+}
+
+model Edit {
+  id         String   @id @default(uuid())
+  draftId    String
+  beforeText String   @db.Text
+  afterText  String   @db.Text
+  changeNote String?  @db.Text
+  draft      Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+}
+
+model DmThread {
+  id           String           @id @default(uuid())
+  senderHandle String
+  intent       DmIntent?
+  temperature  DmTemperature?
+  isResolved   Boolean          @default(false)
+  drafts       Draft[]
+  messages     DmMessage[]
+
+  @@index([intent, temperature])
+  @@index([isResolved])
+}
+
+model DmMessage {
+  id        String      @id @default(uuid())
+  threadId  String
+  direction DmDirection
+  content   String      @db.Text
+  draftId   String?
+  thread    DmThread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  draft     Draft?      @relation(fields: [draftId], references: [id], onDelete: SetNull)
+}
